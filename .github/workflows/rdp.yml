@@ -11,7 +11,7 @@ jobs:
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
-    - name: Setup and Enable RDP via Localhost.run (Manual Steps)
+    - name: Setup and Enable RDP via Pinggy (Manual Steps)
       shell: powershell
       run: |
         # 1. Enable Remote Desktop on the Windows Runner
@@ -23,16 +23,11 @@ jobs:
         $Password = ConvertTo-SecureString "YourSecurePassword123!" -AsPlainText -Force
         Set-LocalUser -Name "runneradmin" -Password $Password
         
-        # 3. Generate a one-time SSH key for the tunnel handshake
-        Write-Host "Generating temporary SSH keys..."
-        ssh-keygen -t rsa -f "$env:USERPROFILE\.ssh\id_rsa" -N "" -q
+        # 3. Start a raw TCP tunnel on port 3389 using Pinggy (No auth required)
+        Write-Host "Starting TCP tunnel via Pinggy..."
+        Start-Process ssh -ArgumentList "-R 0:localhost:3389 tcp@pinggy.io -o StrictHostKeyChecking=no" -RedirectStandardOutput "tunnel.log"
         
-        # 4. Start the reverse RDP tunnel using localhost.run
-        Write-Host "Starting RDP tunnel via localhost.run..."
-        # This forwards the local RDP port (3389) to a public address
-        Start-Process ssh -ArgumentList "-R 80:localhost:3389 nokey@localhost.run -o StrictHostKeyChecking=no" -RedirectStandardOutput "tunnel.log"
-        
-        # Wait a few seconds for the tunnel to boot up, then look for the address
+        # Wait a few seconds for Pinggy to print the connection string
         Start-Sleep -Seconds 7
         if (Test-Path "tunnel.log") {
             Get-Content tunnel.log | ForEach-Object { Write-Host "TUNNEL DETAILS: $_" }
@@ -40,6 +35,6 @@ jobs:
             Write-Host "Error: tunnel.log was not generated."
         }
         
-        # 5. Keep the runner alive so you can work
+        # 4. Keep the runner alive so you can work
         Write-Host "RDP is ready. Waiting for connections..."
         while ($true) { Start-Sleep -Seconds 60 }
