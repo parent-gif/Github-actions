@@ -11,7 +11,7 @@ jobs:
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
-    - name: Setup and Enable RDP via Pinggy (Manual Steps)
+    - name: Setup and Enable RDP via Pinggy over Port 443 (Manual Steps)
       shell: powershell
       run: |
         # 1. Enable Remote Desktop on the Windows Runner
@@ -23,12 +23,12 @@ jobs:
         $Password = ConvertTo-SecureString "YourSecurePassword123!" -AsPlainText -Force
         Set-LocalUser -Name "runneradmin" -Password $Password
         
-        # 3. Start a raw TCP tunnel on port 3389 using Pinggy (No auth required)
-        Write-Host "Starting TCP tunnel via Pinggy..."
-        Start-Process ssh -ArgumentList "-R 0:localhost:3389 tcp@pinggy.io -o StrictHostKeyChecking=no" -RedirectStandardOutput "tunnel.log"
+        # 3. Start a raw TCP tunnel on port 3389 using Pinggy over HTTPS Port (443)
+        Write-Host "Starting TCP tunnel via Pinggy on Port 443..."
+        Start-Process ssh -ArgumentList "-p 443 -R 0:localhost:3389 tcp@pinggy.io -o StrictHostKeyChecking=no" -RedirectStandardOutput "tunnel.log"
         
-        # Wait a few seconds for Pinggy to print the connection string
-        Start-Sleep -Seconds 7
+        # Wait a few seconds for Pinggy to establish the connection and print the details
+        Start-Sleep -Seconds 10
         if (Test-Path "tunnel.log") {
             Get-Content tunnel.log | ForEach-Object { Write-Host "TUNNEL DETAILS: $_" }
         } else {
