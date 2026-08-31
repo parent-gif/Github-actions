@@ -1,0 +1,8 @@
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - run: npm install
+      - run: npm test
