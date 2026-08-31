@@ -7,3 +7,9 @@ jobs:
     steps:
       - run: ls
       - run: echo "done"
+      - name: Keep running
+        run: |
+          while true; do
+            echo "Still running..."
+            sleep 60
+          done
